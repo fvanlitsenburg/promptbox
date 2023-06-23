@@ -19,16 +19,22 @@ model_path = "/home/felix/hf/"
 
 from haystack.nodes.base import BaseComponent
 
+from haystack.schema import Document
+
 
 
 @st.cache_resource
-def load_models():
-    #models = {"flan-t5-base":'','fastchat-t5-3b-v1.0':''}
-    models = {"flan-t5-base":''}
+def load_models(models=['flan-t5-base','fastchat-t5-3b-v1.0']):
+    ''' Load models and store them in cache. On a first trial run, it's recommended to use flan-t5-base, which can be ran relatively easily on CPU.
+    '''
+    #models = {"flan-t5-base":''}
+    models = dict.fromkeys(models,'')
     for model in models:
         models[model] = PromptModel(model_name_or_path=model_path+model,model_kwargs={'task_name':'text2text-generation'})
         print(models[model])
         print("Successfully loaded " + model)
+    p = Pipeline()
+    print(p)
     return models
 
 def load_prompt(prompt_text):
@@ -50,8 +56,8 @@ def build_ES_pipeline(promptmodel,prompt_text):
     #model = PromptModel(model_name_or_path=model_path+model,model_kwargs={'task_name':'text2text-generation'})
     #prompt_node = PromptNode(models[model], default_prompt_template='question-answering-per-document',)
 
-    othermodel = PromptModel(model_name_or_path=model_path+'flan-t5-base',model_kwargs={'task_name':'text2text-generation'})
-    print(othermodel)
+    #othermodel = PromptModel(model_name_or_path=model_path+'flan-t5-base',model_kwargs={'task_name':'text2text-generation'})
+    #print(othermodel)
 
     print("Loading node")
     print(promptmodel)
@@ -68,6 +74,29 @@ def build_ES_pipeline(promptmodel,prompt_text):
     ES_p.add_node(component=BM25retriever, name="Retriever1", inputs=["Query"])
     ES_p.add_node(component=prompt_node, name="QA", inputs=["Retriever1"])
     return ES_p
+
+def check_sentiment(model,in_docs,prompt_text):
+
+    prompt_node = PromptNode(model, default_prompt_template=load_prompt(prompt_text))
+
+    p2 = Pipeline()
+    p2.add_node(component=prompt_node, name="QA", inputs=["Query"])
+
+    documents = {}
+    through_docs = []
+    answers=[]
+    for j in in_docs:
+        answer = p2.run(query="Does the answer indicate yes or no?",params={"QA":{"documents":[Document(j['Answer'])]}})
+        answers.append(answer)
+        if answer['answers'][0].answer == 'no':
+            documents[j['Document']] = 'No'
+            through_docs.append(j['Document'])
+        else:
+            documents[j['Document']] = 'Yes'
+    print(documents)
+    print(answers)
+    return documents,answers,through_docs
+
 
 '''@st.cache_resource
 def load_models(model,prompt_text):
@@ -108,6 +137,9 @@ def haystack_version():
     return requests.get(url, timeout=0.1).json()["hs_version"]
 
 def fetch_docs(store="ES"):
+    '''
+    Fetches the names of files in the document store.
+    '''
     if store == "Weaviate":
         client = weaviate.Client(
         url = "http://localhost:8080",  # Replace with your endpoint
@@ -143,6 +175,24 @@ def fetch_docs(store="ES"):
         docs = [x['key'] for x in result['aggregations']['docs']['buckets']]
 
     return docs
+
+def query_listed_documents(query,documents,model,prompt_text):
+    ''' Takes a query, list of documents, and a pipeline to run retrieval on the specified documents.
+
+    '''
+
+    output = []
+    det_output = []
+
+    p = build_ES_pipeline(model,prompt_text)
+
+    for j in documents:
+        res = p.run(query=query,params={"Retriever1": {"top_k": 5,"filters":{'name':[j]}},"debug": True})
+        out = {'Document':j,'Answer':res['answers'][0].answer}
+        output.append(out)
+        det_output.append(res)
+    print(output)
+    return output,det_output
 
 def query_each_document(query,model,prompt_text):
 
