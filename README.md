@@ -6,6 +6,11 @@
 
 Please document the project the better you can.
 
+To get the models locally:
+```git lfs install
+git clone git@hf.co:flan-t5-base
+git clone git@hf.co:fastchat-t5-3b-v1.0```
+
 # Startup the project
 
 The initial setup.

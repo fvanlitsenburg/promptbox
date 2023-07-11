@@ -15,9 +15,7 @@ from haystack.nodes import BM25Retriever
 from haystack.nodes import  PromptNode, PromptTemplate,AnswerParser,PromptModel
 from elasticsearch import Elasticsearch
 
-model_path = "/home/felix/hf/"
-
-from haystack.nodes.base import BaseComponent
+model_path = "/../../hf/"
 
 from haystack.schema import Document
 
