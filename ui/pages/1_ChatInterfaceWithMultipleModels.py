@@ -55,7 +55,7 @@ def main():
         st.session_state.raw_json = None
 
     # Title
-    st.write("# PromptBox")
+    st.image("promptbox_banner.png")
     st.write("---")
 
     # Sidebar
