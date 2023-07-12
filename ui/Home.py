@@ -12,6 +12,7 @@ st.set_page_config(
 modelbase = load_models()
 
 st.session_state['models'] = modelbase
+#st.session_state['models'] = "flan-t5-base"
 
 st.write("# Welcome to Streamlit! 👋")
 

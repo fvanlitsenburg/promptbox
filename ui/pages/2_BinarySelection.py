@@ -39,13 +39,6 @@ DEFAULT_MODEL3_AT_STARTUP = os.getenv("DEFAULT_MODEL3_AT_STARTUP","flan-t5-base"
 
 
 
-# Sliders
-DEFAULT_DOCS_FROM_RETRIEVER = int(os.getenv("DEFAULT_DOCS_FROM_RETRIEVER", "3"))
-DEFAULT_NUMBER_OF_ANSWERS = int(os.getenv("DEFAULT_NUMBER_OF_ANSWERS", "3"))
-
-# Labels for the evaluation
-EVAL_LABELS = os.getenv("EVAL_FILE", str(Path(__file__).parent / "eval_labels_example.csv"))
-
 # Whether the file upload should be enabled or not
 DISABLE_FILE_UPLOAD = bool(os.getenv("DISABLE_FILE_UPLOAD"))
 
@@ -93,17 +86,7 @@ def main():
     ('flan-t5-base','fastchat-t5-3b-v1.0'))
     model3 = st.sidebar.selectbox('What would you like to use for the third LLM?',
     ('flan-t5-base','fastchat-t5-3b-v1.0'))
-    top_k_retriever = st.sidebar.slider(
-        "Max. number of documents from retriever",
-        min_value=1,
-        max_value=10,
-        value=DEFAULT_DOCS_FROM_RETRIEVER,
-        step=1,
-        on_change=reset_results,
-    )
 
-    eval_mode = st.sidebar.checkbox("Evaluation mode")
-    debug = st.sidebar.checkbox("Show debug info")
 
     # File upload block
     if not DISABLE_FILE_UPLOAD:

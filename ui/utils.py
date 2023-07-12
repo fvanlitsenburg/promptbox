@@ -15,15 +15,15 @@ from haystack.nodes import BM25Retriever
 from haystack.nodes import  PromptNode, PromptTemplate,AnswerParser,PromptModel
 from elasticsearch import Elasticsearch
 
-model_path = "/../../hf/"
+model_path = "../../hf/"
 
 from haystack.schema import Document
 
 
 
 @st.cache_resource
-def load_models(models=['flan-t5-base','fastchat-t5-3b-v1.0']):
-    ''' Load models and store them in cache. On a first trial run, it's recommended to use flan-t5-base, which can be ran relatively easily on CPU.
+def load_models(models=['flan-t5-base']):
+    ''' Load models and store them in cache. On a first trial run, it's recommended to use flan-t5-base, which can be ran relatively easily on CPU. ,'fastchat-t5-3b-v1.0'
     '''
     #models = {"flan-t5-base":''}
     models = dict.fromkeys(models,'')

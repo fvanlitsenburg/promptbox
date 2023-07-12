@@ -13,38 +13,20 @@ model_path = "../../../hf/"
 
 # Adjust to a question that you would like users to see in the search bar when they load the UI:
 # Questions
-DEFAULT_QUESTION_AT_STARTUP = os.getenv("DEFAULT_QUESTION_AT_STARTUP", "Was the applicant deemed 'fit and proper' or not?")
-DEFAULT_QUESTION2_AT_STARTUP = os.getenv("DEFAULT_QUESTION2_AT_STARTUP", "Does the answer indicate yes or no?")
-DEFAULT_QUESTION3_AT_STARTUP = os.getenv("DEFAULT_QUESTION3_AT_STARTUP", "Why was the applicant not deemed 'fit and proper'?")
+DEFAULT_QUESTION_AT_STARTUP_P1 = os.getenv("DEFAULT_QUESTION_AT_STARTUP_P1", "What are HSBC’s restrictive policies on the Oil and Gas sectors?")
+
 
 # Prompts
-DEFAULT_PROMPT_AT_STARTUP = os.getenv("DEFAULT_PROMPT_AT_STARTUP","""Synthesize a comprehensive answer from the following given question and relevant paragraphs.
+DEFAULT_PROMPT_AT_STARTUP_P1 = os.getenv("DEFAULT_PROMPT_AT_STARTUP_P1","""Synthesize a comprehensive answer from the following given question and relevant paragraphs.
 Provide a clear and concise response that summarizes the key points and information presented in the paragraphs.
 Your answer should be in your own words and be no longer than necessary.
 \n\n Question: {query}
 \n\n Paragraphs: {join(documents)}  \n\n Answer:""")
-DEFAULT_PROMPT2_AT_STARTUP = os.getenv("DEFAULT_PROMPT2_AT_STARTUP","""Give a 'yes' or 'no' or 'na' answer based on the following query and document excerpt(s). Answer with 'na' if the query cannot conclusively be answered based on the provided document excerpt(s)
-\n\n Question: {query}
-\n\n Paragraphs: {join(documents)}  \n\n Answer:""")
-DEFAULT_PROMPT3_AT_STARTUP = os.getenv("DEFAULT_PROMPT3_AT_STARTUP","""Synthesize a comprehensive answer from the following given question and relevant paragraphs.
-Provide a clear and concise response that summarizes the key points and information presented in the paragraphs.
-Your answer should be in your own words and be no longer than necessary.
-\n\n Question: {query}
-\n\n Paragraphs: {join(documents)}  \n\n Answer:""")
-
-# Models
-DEFAULT_MODEL_AT_STARTUP = os.getenv("DEFAULT_MODEL_AT_STARTUP","flan-t5-base")
-DEFAULT_MODEL2_AT_STARTUP = os.getenv("DEFAULT_MODEL2_AT_STARTUP","flan-t5-base")
-DEFAULT_MODEL3_AT_STARTUP = os.getenv("DEFAULT_MODEL3_AT_STARTUP","flan-t5-base")
-
 
 
 # Sliders
 DEFAULT_DOCS_FROM_RETRIEVER = int(os.getenv("DEFAULT_DOCS_FROM_RETRIEVER", "3"))
 DEFAULT_NUMBER_OF_ANSWERS = int(os.getenv("DEFAULT_NUMBER_OF_ANSWERS", "3"))
-
-# Labels for the evaluation
-EVAL_LABELS = os.getenv("EVAL_FILE", str(Path(__file__).parent / "eval_labels_example.csv"))
 
 # Whether the file upload should be enabled or not
 DISABLE_FILE_UPLOAD = bool(os.getenv("DISABLE_FILE_UPLOAD"))
@@ -60,22 +42,12 @@ def main():
     st.set_page_config(page_title="Promptbox", layout="wide")
 
     # Persistent state
-    set_state_if_absent("question", DEFAULT_QUESTION_AT_STARTUP)
-    set_state_if_absent("question2", DEFAULT_QUESTION2_AT_STARTUP)
-    set_state_if_absent("question3", DEFAULT_QUESTION3_AT_STARTUP)
-    set_state_if_absent("prompt", DEFAULT_PROMPT_AT_STARTUP)
-    set_state_if_absent("prompt2", DEFAULT_PROMPT2_AT_STARTUP)
-    set_state_if_absent("prompt3", DEFAULT_PROMPT3_AT_STARTUP)
-    set_state_if_absent("model",DEFAULT_MODEL_AT_STARTUP)
-    set_state_if_absent("model2",DEFAULT_MODEL2_AT_STARTUP)
-    set_state_if_absent("model3",DEFAULT_MODEL3_AT_STARTUP)
+    set_state_if_absent("question_p1", DEFAULT_QUESTION_AT_STARTUP_P1)
+    set_state_if_absent("prompt_p1", DEFAULT_PROMPT_AT_STARTUP_P1)
     set_state_if_absent("results", None)
     set_state_if_absent("raw_json", None)
     set_state_if_absent("random_question_requested", False)
 
-    #load_models(DEFAULT_MODEL_AT_STARTUP,DEFAULT_PROMPT_AT_STARTUP)
-    #modelbase = load_models()
-    print(st.session_state.models)
     # Small callback to reset the interface in case the text of the question changes
     def reset_results(*args):
         st.session_state.answer = None
@@ -88,12 +60,9 @@ def main():
 
     # Sidebar
     st.sidebar.header("Options")
-    model = st.sidebar.selectbox('What would you like to use for the first LLM?',
-    ('flan-t5-base','fastchat-t5-3b-v1.0'))
-    model2 = st.sidebar.selectbox('What would you like to use for the second LLM?',
-    ('flan-t5-base','fastchat-t5-3b-v1.0'))
-    model3 = st.sidebar.selectbox('What would you like to use for the third LLM?',
-    ('flan-t5-base','fastchat-t5-3b-v1.0'))
+    st.sidebar.write("Available models: \n ")
+    for i in st.session_state.models:
+        st.sidebar.markdown("-- " + i)
     top_k_retriever = st.sidebar.slider(
         "Max. number of documents from retriever",
         min_value=1,
@@ -102,9 +71,6 @@ def main():
         step=1,
         on_change=reset_results,
     )
-
-    eval_mode = st.sidebar.checkbox("Evaluation mode")
-    debug = st.sidebar.checkbox("Show debug info")
 
     # File upload block
     if not DISABLE_FILE_UPLOAD:
@@ -115,9 +81,7 @@ def main():
             if data_file:
                 raw_json = upload_doc(data_file)
                 st.sidebar.write(str(data_file.name) + " &nbsp;&nbsp; ✅ ")
-                if debug:
-                    st.subheader("REST API JSON response")
-                    st.sidebar.write(raw_json)
+
 
     hs_version = ""
     try:
@@ -158,9 +122,7 @@ def main():
                 """
         This demo allows you to upload documents and query them using Generative AI.
 
-        Several LLM agents are tied together. Your second question will only be applied to documents where the first question came back with 'yes'.
-
-        Using the tab "detailed instructions" you can edit the prompt templates used.
+        On this page, we will render output from the same question, for the same document, using different models so you can compare.
 
         """,
                 unsafe_allow_html=True,
@@ -169,36 +131,23 @@ def main():
 
 
 
+            st.subheader("Select a document")
 
-            st.subheader("First question - binary for each document")
+            document = st.selectbox('',
+            (fetch_docs()))
+            st.subheader("Write your question")
 
             # Search bar
-            question = st.text_input("", value=st.session_state.question, max_chars=100, on_change=reset_results,key=1)
+            question_p1 = st.text_input("", value=st.session_state.question_p1, max_chars=100, on_change=reset_results,key=1)
 
             with tab2:
                 with st.expander("See and edit first question prompt template"):
-                        prompt = st.text_area("", value=st.session_state.prompt, max_chars=1000, on_change=reset_results,key=2)
+                        prompt_p1 = st.text_area("", value=st.session_state.prompt_p1, max_chars=1000, on_change=reset_results,key=2)
 
             col1, = st.columns(1)
             col1.markdown("<style>.stButton button {width:100%;}</style>", unsafe_allow_html=True)
 
-            st.subheader("Second question - checking sentiment for documents")
 
-            # Search bar
-            question2 = st.text_input("", value=st.session_state.question2, max_chars=100, on_change=reset_results,key=3)
-
-            st.subheader("Third question - checking content of relevant documents")
-
-            # Search bar
-            question3 = st.text_input("", value=st.session_state.question3, max_chars=100, on_change=reset_results,key=4)
-
-            with tab2:
-                with st.expander("See and edit second question prompt template"):
-                        prompt2 = st.text_area("", value=st.session_state.prompt2, max_chars=1000, on_change=reset_results,key=5)
-
-            with tab2:
-                with st.expander("See and edit third question prompt template"):
-                        prompt3 = st.text_area("", value=st.session_state.prompt3, max_chars=1000, on_change=reset_results,key=6)
 
             col1, = st.columns(1)
             col1.markdown("<style>.stButton button {width:100%;}</style>", unsafe_allow_html=True)
@@ -211,7 +160,7 @@ def main():
             run_pressed = col1.button("Run")
 
             run_query = (
-                run_pressed or question != st.session_state.question
+                run_pressed or question_p1 != st.session_state.question_p1
             ) and not st.session_state.random_question_requested
 
             # Check the connection
@@ -224,35 +173,34 @@ def main():
             if not run_pressed:
 
                 with part2:
-                    st.table(dict.fromkeys(fetch_docs(),"No input, ask a question!"))
+                    st.table(dict.fromkeys(st.session_state.models,"No input, ask a question!"))
 
-            elif run_query and question:
+            elif run_query and question_p1:
                 reset_results()
-                st.session_state.question = question
+                st.session_state.question_p1 = question_p1
 
                 try:
-                    print("Running "+model)
-                    print(modelbase[model])
-                    print(type(modelbase[model]))
-                    output = query_listed_documents(question,fetch_docs(),modelbase[model],prompt)
+                    modelbase = st.session_state.models
+                    output = {}
+                    detailed_output = {}
+                    for model in modelbase:
+                        print("Running "+model)
+                        print(model)
+                        print(modelbase[model])
+                        print(type(modelbase[model]))
+                        print(document)
+                        response = query_listed_documents(question_p1,[document],modelbase[model],prompt_p1)
+                        output[model] = response[0][0]['Answer']
+                        detailed_output[model] = response[1]
                     print("Table")
                     with part2:
-                        st.table(output[0])
-                    print("Check sentiment")
-                    output2 = check_sentiment(modelbase[model2],output[0],prompt2)
-                    with part2:
-                        st.write(question2)
-                        st.table(output2[0])
-                    print("oOutput:")
+                        st.table(output)
+
                     with tab3:
                         expander = st.expander("See detailed prompt info for question 1")
-                        expander.write(output[1])
-                        expander = st.expander("See detailed prompt info for question 2")
-                        expander.write(output2[1])
-                    output3 = query_listed_documents(question3,output2[2],modelbase[model3],prompt3)
-                    with part2:
-                        st.write(question3)
-                        st.table(output3[0])
+                        expander.write(response[1])
+
+
                 except Exception as e:
                     print(e)
 
