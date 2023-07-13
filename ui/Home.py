@@ -20,7 +20,7 @@ st.sidebar.success("Select a use case above.")
 
 st.markdown(
     """
-    Promptbox brings Generative AI in a more intuitive, workflow-manner to your organisation.
+    Promptbox brings Generative AI in a more intuitive, workflow-manner to your organisation. \n
     **👈 Select a use case from the sidebar** to see some examples
 
 """
