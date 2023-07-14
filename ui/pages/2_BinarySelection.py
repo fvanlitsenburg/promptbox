@@ -50,7 +50,7 @@ def set_state_if_absent(key, value):
 
 def main():
 
-    st.set_page_config(page_title="Promptbox", layout="wide")
+    st.set_page_config(page_title="Promptbox", layout="wide",page_icon="ui/pages/promptbox_logo.png",)
 
     # Persistent state
     set_state_if_absent("question", DEFAULT_QUESTION_AT_STARTUP)
@@ -75,7 +75,7 @@ def main():
         st.session_state.raw_json = None
 
     # Title
-    st.write("# PromptBox")
+    st.image("ui/pages/promptbox_banner.png")
     st.write("---")
 
     # Sidebar
@@ -213,6 +213,12 @@ def main():
                 st.session_state.question = question
 
                 try:
+                    # Running first model
+                    if model in modelbase.keys():
+                            print("No loading needed")
+                        else:
+                            print("Loading next model")
+                            modelbase = load_models([model])
                     print("Running "+model)
                     print(modelbase[model])
                     print(type(modelbase[model]))
@@ -221,6 +227,15 @@ def main():
                     with part2:
                         st.table(output[0])
                     print("Check sentiment")
+
+                    # Running second model
+
+                    if model2 in modelbase.keys():
+                            print("No loading needed")
+                        else:
+                            print("Loading next model")
+                            modelbase = load_models([model2])
+
                     output2 = check_sentiment(modelbase[model2],output[0],prompt2)
                     with part2:
                         st.write(question2)
@@ -231,6 +246,15 @@ def main():
                         expander.write(output[1])
                         expander = st.expander("See detailed prompt info for question 2")
                         expander.write(output2[1])
+
+                    # Running third model
+
+                    if model3 in modelbase.keys():
+                            print("No loading needed")
+                        else:
+                            print("Loading next model")
+                            modelbase = load_models([model3])
+
                     output3 = query_listed_documents(question3,output2[2],modelbase[model3],prompt3)
                     with part2:
                         st.write(question3)

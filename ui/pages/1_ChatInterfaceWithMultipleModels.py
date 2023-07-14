@@ -9,8 +9,6 @@ import streamlit as st
 from markdown import markdown
 from utils import haystack_is_ready, query, send_feedback, upload_doc, haystack_version, get_backlink, load_models, fetch_docs, query_listed_documents, check_sentiment
 
-model_path = "../../../hf/"
-
 # Adjust to a question that you would like users to see in the search bar when they load the UI:
 # Questions
 DEFAULT_QUESTION_AT_STARTUP_P1 = os.getenv("DEFAULT_QUESTION_AT_STARTUP_P1", "What are HSBC’s restrictive policies on the Oil and Gas sectors?")
@@ -24,10 +22,6 @@ Your answer should be in your own words and be no longer than necessary.
 \n\n Paragraphs: {join(documents)}  \n\n Answer:""")
 
 
-# Sliders
-DEFAULT_DOCS_FROM_RETRIEVER = int(os.getenv("DEFAULT_DOCS_FROM_RETRIEVER", "3"))
-DEFAULT_NUMBER_OF_ANSWERS = int(os.getenv("DEFAULT_NUMBER_OF_ANSWERS", "3"))
-
 # Whether the file upload should be enabled or not
 DISABLE_FILE_UPLOAD = bool(os.getenv("DISABLE_FILE_UPLOAD"))
 
@@ -39,7 +33,7 @@ def set_state_if_absent(key, value):
 
 def main():
 
-    st.set_page_config(page_title="Promptbox", layout="wide")
+    st.set_page_config(page_title="Promptbox", layout="wide",page_icon="ui/pages/promptbox_logo.png",)
 
     # Persistent state
     set_state_if_absent("question_p1", DEFAULT_QUESTION_AT_STARTUP_P1)
@@ -55,22 +49,15 @@ def main():
         st.session_state.raw_json = None
 
     # Title
-    st.write("# PromptBox")
+    st.image("ui/pages/promptbox_banner.png")
     st.write("---")
 
     # Sidebar
     st.sidebar.header("Options")
     st.sidebar.write("Available models: \n ")
-    for i in st.session_state.models:
+    for i in st.session_state.modellist:
         st.sidebar.markdown("-- " + i)
-    top_k_retriever = st.sidebar.slider(
-        "Max. number of documents from retriever",
-        min_value=1,
-        max_value=10,
-        value=DEFAULT_DOCS_FROM_RETRIEVER,
-        step=1,
-        on_change=reset_results,
-    )
+
 
     # File upload block
     if not DISABLE_FILE_UPLOAD:
@@ -181,9 +168,16 @@ def main():
 
                 try:
                     modelbase = st.session_state.models
+                    modellist = st.session_state.modellist
                     output = {}
                     detailed_output = {}
-                    for model in modelbase:
+                    for model in modellist:
+                        if model in modelbase.keys():
+                            print("No loading needed")
+                        else:
+                            print("Loading next model")
+                            modelbase = load_models([model])
+
                         print("Running "+model)
                         print(model)
                         print(modelbase[model])

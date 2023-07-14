@@ -15,7 +15,7 @@ from haystack.nodes import BM25Retriever
 from haystack.nodes import  PromptNode, PromptTemplate,AnswerParser,PromptModel
 from elasticsearch import Elasticsearch
 
-model_path = "../../hf/"
+model_path = "../hf/"
 
 from haystack.schema import Document
 
@@ -79,7 +79,7 @@ def check_sentiment(model,in_docs,prompt_text):
     for j in in_docs:
         answer = p2.run(query="Does the answer indicate yes or no?",params={"QA":{"documents":[Document(j['Answer'])]}})
         answers.append(answer)
-        if answer['answers'][0].answer == 'no':
+        if answer['results'][0] == 'no':
             documents[j['Document']] = 'No'
             through_docs.append(j['Document'])
         else:
@@ -179,90 +179,14 @@ def query_listed_documents(query,documents,model,prompt_text):
 
     for j in documents:
         res = p.run(query=query,params={"Retriever1": {"top_k": 5,"filters":{'name':[j]}},"debug": True})
-        out = {'Document':j,'Answer':res['answers'][0].answer}
+        out = {'Document':j,'Answer':res['results'][0].replace('<pad>')}
         output.append(out)
         det_output.append(res)
     print(output)
     return output,det_output
-
-def query(query, filters={}, top_k_retriever=3) -> Tuple[List[Dict[str, Any]], Dict[str, str]]:
-    """
-    Send a query to the REST API and parse the answer.
-    Returns both a ready-to-use representation of the results and the raw JSON.
-    """
-
-    url = f"{API_ENDPOINT}/{DOC_REQUEST}"
-    params = {"filters": filters, "Retriever": {"top_k": top_k_retriever}, "Reader": {"top_k": top_k_reader}}
-    req = {"query": query, "params": params}
-    response_raw = requests.post(url, json=req)
-
-    if response_raw.status_code >= 400 and response_raw.status_code != 503:
-        raise Exception(f"{vars(response_raw)}")
-
-    response = response_raw.json()
-    if "errors" in response:
-        raise Exception(", ".join(response["errors"]))
-
-    # Format response
-    results = []
-    answers = response["answers"]
-    for answer in answers:
-        if answer.get("answer", None):
-            results.append(
-                {
-                    "context": "..." + answer["context"] + "...",
-                    "answer": answer.get("answer", None),
-                    "source": answer["meta"]["name"],
-                    "relevance": round(answer["score"] * 100, 2),
-                    "document": [doc for doc in response["documents"] if doc["id"] == answer["document_id"]][0],
-                    "offset_start_in_doc": answer["offsets_in_document"][0]["start"],
-                    "_raw": answer,
-                }
-            )
-        else:
-            results.append(
-                {
-                    "context": None,
-                    "answer": None,
-                    "document": None,
-                    "relevance": round(answer["score"] * 100, 2),
-                    "_raw": answer,
-                }
-            )
-    return results, response
-
-
-def send_feedback(query, answer_obj, is_correct_answer, is_correct_document, document) -> None:
-    """
-    Send a feedback (label) to the REST API
-    """
-    url = f"{API_ENDPOINT}/{DOC_FEEDBACK}"
-    req = {
-        "query": query,
-        "document": document,
-        "is_correct_answer": is_correct_answer,
-        "is_correct_document": is_correct_document,
-        "origin": "user-feedback",
-        "answer": answer_obj,
-    }
-    response_raw = requests.post(url, json=req)
-    if response_raw.status_code >= 400:
-        raise ValueError(f"An error was returned [code {response_raw.status_code}]: {response_raw.json()}")
-
 
 def upload_doc(file):
     url = f"{API_ENDPOINT}/{DOC_UPLOAD}"
     files = [("files", file)]
     response = requests.post(url, files=files,data={'split_length':'50'}).json()
     return response
-
-
-def get_backlink(result) -> Tuple[Optional[str], Optional[str]]:
-    if result.get("document", None):
-        doc = result["document"]
-        if isinstance(doc, dict):
-            if doc.get("meta", None):
-                if isinstance(doc["meta"], dict):
-                    if doc["meta"].get("url", None) and doc["meta"].get("title", None):
-                        return doc["meta"]["url"], doc["meta"]["title"]
-    return None, None
