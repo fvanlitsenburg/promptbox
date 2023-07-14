@@ -7,7 +7,7 @@ from json import JSONDecodeError
 import pandas as pd
 import streamlit as st
 from markdown import markdown
-from utils import haystack_is_ready, query, send_feedback, upload_doc, haystack_version, get_backlink, load_models, fetch_docs, query_listed_documents, check_sentiment
+from utils import haystack_is_ready, upload_doc, haystack_version, load_models, fetch_docs, query_listed_documents, check_sentiment
 
 # Adjust to a question that you would like users to see in the search bar when they load the UI:
 # Questions

@@ -7,7 +7,7 @@ from json import JSONDecodeError
 import pandas as pd
 import streamlit as st
 from markdown import markdown
-from utils import haystack_is_ready, query, send_feedback, upload_doc, haystack_version, get_backlink, load_models, fetch_docs, query_listed_documents, check_sentiment
+from utils import haystack_is_ready, upload_doc, haystack_version, load_models, fetch_docs, query_listed_documents, check_sentiment
 
 model_path = "../../../hf/"
 
@@ -216,7 +216,7 @@ def main():
                     # Running first model
                     if model in modelbase.keys():
                             print("No loading needed")
-                        else:
+                    else:
                             print("Loading next model")
                             modelbase = load_models([model])
                     print("Running "+model)
@@ -232,7 +232,7 @@ def main():
 
                     if model2 in modelbase.keys():
                             print("No loading needed")
-                        else:
+                    else:
                             print("Loading next model")
                             modelbase = load_models([model2])
 
@@ -251,7 +251,7 @@ def main():
 
                     if model3 in modelbase.keys():
                             print("No loading needed")
-                        else:
+                    else:
                             print("Loading next model")
                             modelbase = load_models([model3])
 
