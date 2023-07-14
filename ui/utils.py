@@ -23,23 +23,17 @@ from haystack.schema import Document
 
 @st.cache_resource
 def load_models(models=['flan-t5-base']):
-    ''' Load models and store them in cache. On a first trial run, it's recommended to use flan-t5-base, which can be ran relatively easily on CPU. ,'fastchat-t5-3b-v1.0'
+    ''' Load model and store it in cache. If a different model is loaded, we overwrite the old model.
     '''
-    #models = {"flan-t5-base":''}
     models = dict.fromkeys(models,'')
     for model in models:
-        models[model] = PromptModel(model_name_or_path=model_path+model,model_kwargs={'task_name':'text2text-generation'})
+        models[model] = PromptModel(model_name_or_path=model_path+model,model_kwargs={'task_name':'text2text-generation','trust_remote_code':True})
         print(models[model])
         print("Successfully loaded " + model)
     p = Pipeline()
     print(p)
+    print(models)
     return models
-
-def load_prompt(prompt_text):
-    lfqa_prompt = PromptTemplate(name="lfqa",
-                             prompt_text=prompt_text,
-                             output_parser=AnswerParser(),)
-    return lfqa_prompt
 
 def build_ES_pipeline(promptmodel,prompt_text):
 
@@ -60,8 +54,7 @@ def build_ES_pipeline(promptmodel,prompt_text):
     print("Loading node")
     print(promptmodel)
     print(type(promptmodel))
-    prompt_node = PromptNode(promptmodel, default_prompt_template=load_prompt(prompt_text))
-
+    prompt_node = PromptNode(promptmodel, default_prompt_template=prompt_text)
 
     print(prompt_node)
     #prompt_node = model
@@ -75,7 +68,7 @@ def build_ES_pipeline(promptmodel,prompt_text):
 
 def check_sentiment(model,in_docs,prompt_text):
 
-    prompt_node = PromptNode(model, default_prompt_template=load_prompt(prompt_text))
+    prompt_node = PromptNode(model, default_prompt_template=prompt_text)
 
     p2 = Pipeline()
     p2.add_node(component=prompt_node, name="QA", inputs=["Query"])
@@ -190,35 +183,6 @@ def query_listed_documents(query,documents,model,prompt_text):
         output.append(out)
         det_output.append(res)
     print(output)
-    return output,det_output
-
-def query_each_document(query,model,prompt_text):
-
-    #p = load_models(model,prompt_text)
-
-    p = build_ES_pipeline(model,prompt_text)
-
-    print(model)
-    print(query)
-    print(prompt_text)
-    print(p)
-
-    print("fetching docs")
-    docs = fetch_docs()
-
-    output = []
-    det_output = []
-
-    for j in docs:
-        try:
-            res = p.run(query=query,params={"Retriever1": {"top_k": 5,"filters":{'name':[j]}},"debug": True})
-        except:
-            print(res["_debug"])
-        out = {'Document':j,'Answer':res['answers'][0].answer}
-        output.append(out)
-        det_output.append(res["_debug"])
-    print(output)
-    print(p.components)
     return output,det_output
 
 def query(query, filters={}, top_k_retriever=3) -> Tuple[List[Dict[str, Any]], Dict[str, str]]:
