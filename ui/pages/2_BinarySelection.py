@@ -14,8 +14,8 @@ model_path = "../../../hf/"
 # Adjust to a question that you would like users to see in the search bar when they load the UI:
 # Questions
 DEFAULT_QUESTION_AT_STARTUP = os.getenv("DEFAULT_QUESTION_AT_STARTUP", "Was the applicant deemed 'fit and proper' or not?")
-DEFAULT_QUESTION2_AT_STARTUP = os.getenv("DEFAULT_QUESTION2_AT_STARTUP", "Does the answer indicate yes or no?")
-DEFAULT_QUESTION3_AT_STARTUP = os.getenv("DEFAULT_QUESTION3_AT_STARTUP", "Why was the applicant not deemed 'fit and proper'?")
+DEFAULT_QUESTION2_AT_STARTUP = os.getenv("DEFAULT_QUESTION2_AT_STARTUP", "Was the application 'fit and proper'?")
+DEFAULT_QUESTION3_AT_STARTUP = os.getenv("DEFAULT_QUESTION3_AT_STARTUP", "What was the applicant's defense?")
 
 # Prompts
 DEFAULT_PROMPT_AT_STARTUP = os.getenv("DEFAULT_PROMPT_AT_STARTUP","""Synthesize a comprehensive answer from the following given question and relevant paragraphs.
@@ -23,9 +23,10 @@ Provide a clear and concise response that summarizes the key points and informat
 Your answer should be in your own words and be no longer than necessary.
 \n\n Question: {query}
 \n\n Paragraphs: {join(documents)}  \n\n Answer:""")
-DEFAULT_PROMPT2_AT_STARTUP = os.getenv("DEFAULT_PROMPT2_AT_STARTUP","""Give a 'yes' or 'no' or 'na' answer based on the following query and document excerpt(s). Answer with 'na' if the query cannot conclusively be answered based on the provided document excerpt(s)
-\n\n Question: {query}
-\n\n Paragraphs: {join(documents)}  \n\n Answer:""")
+DEFAULT_PROMPT2_AT_STARTUP = os.getenv("DEFAULT_PROMPT2_AT_STARTUP","""Answer the following question based on the provided paragraph. Answer it with 'yes' or 'no', then provide your reasoning. Answer 'na' if the answer is unclear. For example: 'yes'. Because...
+ Question: {query}
+ Paragraph: {join(documents)}
+ Answer:""")
 DEFAULT_PROMPT3_AT_STARTUP = os.getenv("DEFAULT_PROMPT3_AT_STARTUP","""Synthesize a comprehensive answer from the following given question and relevant paragraphs.
 Provide a clear and concise response that summarizes the key points and information presented in the paragraphs.
 Your answer should be in your own words and be no longer than necessary.
@@ -97,9 +98,7 @@ def main():
             if data_file:
                 raw_json = upload_doc(data_file)
                 st.sidebar.write(str(data_file.name) + " &nbsp;&nbsp; ✅ ")
-                if debug:
-                    st.subheader("REST API JSON response")
-                    st.sidebar.write(raw_json)
+
 
     hs_version = ""
     try:
@@ -236,7 +235,7 @@ def main():
                             print("Loading next model")
                             modelbase = load_models([model2])
 
-                    output2 = check_sentiment(modelbase[model2],output[0],prompt2)
+                    output2 = check_sentiment(question2,modelbase[model2],output[0],prompt2)
                     with part2:
                         st.write(question2)
                         st.table(output2[0])

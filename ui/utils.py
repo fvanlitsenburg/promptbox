@@ -66,7 +66,7 @@ def build_ES_pipeline(promptmodel,prompt_text):
     ES_p.add_node(component=prompt_node, name="QA", inputs=["Retriever1"])
     return ES_p
 
-def check_sentiment(model,in_docs,prompt_text):
+def check_sentiment(query,model,in_docs,prompt_text):
 
     prompt_node = PromptNode(model, default_prompt_template=prompt_text)
 
@@ -77,15 +77,16 @@ def check_sentiment(model,in_docs,prompt_text):
     through_docs = []
     answers=[]
     for j in in_docs:
-        answer = p2.run(query="Does the answer indicate yes or no?",params={"QA":{"documents":[Document(j['Answer'])]}})
+        answer = p2.run(query=query,params={"QA":{"documents":[Document(j['Answer'])]}})
         answers.append(answer)
-        if answer['results'][0] == 'no':
+        if r"no." in answer['results'][0].lower():
             documents[j['Document']] = 'No'
             through_docs.append(j['Document'])
+        elif r"na." in answer['results'][0].lower():
+            documents[j['Document']] = 'N/a'
         else:
             documents[j['Document']] = 'Yes'
     print(documents)
-    print(answers)
     return documents,answers,through_docs
 
 
@@ -178,8 +179,9 @@ def query_listed_documents(query,documents,model,prompt_text):
     p = build_ES_pipeline(model,prompt_text)
 
     for j in documents:
-        res = p.run(query=query,params={"Retriever1": {"top_k": 5,"filters":{'name':[j]}},"debug": True})
-        out = {'Document':j,'Answer':res['results'][0].replace('<pad>')}
+        res = p.run(query=query,params={"Retriever1": {"top_k": 10,"filters":{'name':[j]}},"debug": True})
+        print(res)
+        out = {'Document':j,'Answer':res['results'][0].replace('<pad>',"")}
         output.append(out)
         det_output.append(res)
     print(output)

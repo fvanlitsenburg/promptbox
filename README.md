@@ -1,10 +1,7 @@
 # Data analysis
-- Document here the project: hackathon
-- Description: Project Description
-- Data Source:
-- Type of analysis:
+Medium coming.
 
-Please document the project the better you can.
+Own note:
 
 To get the models locally:
 ```

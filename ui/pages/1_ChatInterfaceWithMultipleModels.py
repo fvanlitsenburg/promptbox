@@ -12,6 +12,10 @@ from utils import haystack_is_ready, upload_doc, haystack_version, load_models, 
 # Adjust to a question that you would like users to see in the search bar when they load the UI:
 # Questions
 DEFAULT_QUESTION_AT_STARTUP_P1 = os.getenv("DEFAULT_QUESTION_AT_STARTUP_P1", "What are HSBC’s restrictive policies on the Oil and Gas sectors?")
+DEFAULT_QUESTION_AT_STARTUP_P2 = os.getenv("DEFAULT_QUESTION_AT_STARTUP_P2", "What kind of new financing will be prohibited by HSBC based on this policy?")
+DEFAULT_QUESTION_AT_STARTUP_P3 = os.getenv("DEFAULT_QUESTION_AT_STARTUP_P3", "What kind of new clients will be restricted by HSBC based on this policy?")
+DEFAULT_QUESTION_AT_STARTUP_P4 = os.getenv("DEFAULT_QUESTION_AT_STARTUP_P4", "What kind of transaction and/or client will be subject to enhanced due-diligence based on this policy?")
+DEFAULT_QUESTION_AT_STARTUP_P5 = os.getenv("DEFAULT_QUESTION_AT_STARTUP_P5", "  How will Client Transition Plan affect HSBC’s decision on financing Oil and Gas clients?")
 
 
 # Prompts
@@ -37,7 +41,12 @@ def main():
 
     # Persistent state
     set_state_if_absent("question_p1", DEFAULT_QUESTION_AT_STARTUP_P1)
+    set_state_if_absent("question_p2", DEFAULT_QUESTION_AT_STARTUP_P2)
+    set_state_if_absent("question_p3", DEFAULT_QUESTION_AT_STARTUP_P3)
+    set_state_if_absent("question_p4", DEFAULT_QUESTION_AT_STARTUP_P4)
+    set_state_if_absent("question_p5", DEFAULT_QUESTION_AT_STARTUP_P5)
     set_state_if_absent("prompt_p1", DEFAULT_PROMPT_AT_STARTUP_P1)
+
     set_state_if_absent("results", None)
     set_state_if_absent("raw_json", None)
     set_state_if_absent("random_question_requested", False)
@@ -128,13 +137,13 @@ def main():
             question_p1 = st.text_input("", value=st.session_state.question_p1, max_chars=100, on_change=reset_results,key=1)
 
             with tab2:
-                with st.expander("See and edit first question prompt template"):
+                with st.expander("See and edit question prompt template"):
                         prompt_p1 = st.text_area("", value=st.session_state.prompt_p1, max_chars=1000, on_change=reset_results,key=2)
 
-            col1, = st.columns(1)
-            col1.markdown("<style>.stButton button {width:100%;}</style>", unsafe_allow_html=True)
-
-
+            question_p2 = st.text_input("", value=st.session_state.question_p2, max_chars=100, on_change=reset_results,key=3)
+            question_p3 = st.text_input("", value=st.session_state.question_p3, max_chars=100, on_change=reset_results,key=4)
+            question_p4 = st.text_input("", value=st.session_state.question_p4, max_chars=100, on_change=reset_results,key=5)
+            question_p5 = st.text_input("", value=st.session_state.question_p5, max_chars=100, on_change=reset_results,key=6)
 
             col1, = st.columns(1)
             col1.markdown("<style>.stButton button {width:100%;}</style>", unsafe_allow_html=True)
@@ -183,16 +192,19 @@ def main():
                         print(modelbase[model])
                         print(type(modelbase[model]))
                         print(document)
-                        response = query_listed_documents(question_p1,[document],modelbase[model],prompt_p1)
-                        output[model] = response[0][0]['Answer']
-                        detailed_output[model] = response[1]
+                        output[model] = {}
+                        detailed_output[model] = {}
+                        for question in [question_p1,question_p2,question_p3,question_p4,question_p5]:
+                            response = query_listed_documents(question,[document],modelbase[model],prompt_p1)
+                            output[model][question] = response[0][0]['Answer']
+                            detailed_output[model][question] = response[1]
                     print("Table")
                     with part2:
                         st.table(output)
 
                     with tab3:
                         expander = st.expander("See detailed prompt info for question 1")
-                        expander.write(response[1])
+                        expander.write(detailed_output)
 
 
                 except Exception as e:

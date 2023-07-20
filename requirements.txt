@@ -73,8 +73,7 @@ Events==0.4
 exceptiongroup==1.1.1
 executing==1.2.0
 faiss-cpu==1.7.2
-# Editable install with no version control (farm-haystack==1.17.1)
--e /home/felix/hackathon/haystack
+farm-haystack==1.18.1
 fastapi==0.95.1
 fastjsonschema==2.16.3
 ffmpeg-python==0.2.0
