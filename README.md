@@ -1,117 +1,62 @@
-# Data analysis
-Medium coming.
+# Promptbox
 
-Own note:
+Promptbox is a "private GPT" solution that allows you to perform analysis on your own documents within a secure, circumscribed environment.
 
-To get the models locally:
+More information can be found in this Medium article:
+https://medium.com/@fvanlitsenburg/building-a-privategpt-with-haystack-part-1-why-and-how-de6fa43e18b
+
+# Installation
+
+## Downloading Large Language Models from Huggingface
+
+Promptbox runs on locally stored models. It has been built to run on Ubuntu 20.04.
+
+To get the models locally, we need git-lfs:
+
 ```
 curl -s https://packagecloud.io/install/repositories/github/git-lfs/script.deb.sh | sudo bash
 sudo apt-get install git-lfs
 git lfs install
-git clone https://github.com/fvanlitsenburg/promptbox.git
+```
 
+In the file `ui/utils.py`, we reference the model paths. Therefore, we need to create this file at the same directory level as where we'll install Promptbox.
+
+```
 mkdir hf
 cd hf
+```
 
+Promptbox uses flan-t5-base and fastchat-t5-3b-v1.0. Other models can be used as well. To use other models, specify them in line 15 of `ui/Home.py`.
+
+```
 git clone https://huggingface.co/google/flan-t5-base
 git clone https://huggingface.co/lmsys/fastchat-t5-3b-v1.0
+```
 
-git clone https://huggingface.co/tiiuae/falcon-7b
-
-
-git clone https://huggingface.co/bigscience/bloom-560m
-git clone https://huggingface.co/databricks/dolly-v2-3b
-
-conda create -n python38 python=3.8
-conda activate python38
+## Downloading Promptbox and Haystack repositories
 
 git clone -b v1.17.1 https://github.com/deepset-ai/haystack.git
+git clone https://github.com/fvanlitsenburg/promptbox.git
 
-sudo curl -L "https://github.com/docker/compose/releases/download/1.29.2/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
+## Running Haystack and Promptbox
 
-sudo chmod +x /usr/local/bin/docker-compose
+Assuming you have created a separate python environment in pyenv or conda.
 
-sudo mv /usr/local/bin/docker-compose /usr/bin/docker-compose
+Assuming you have docker-compose installed and running.
 
-sudo systemctl start docker
+First,
 
+```
+cd haystack
+docker-compose up
+```
+
+In a separate terminal, let's get Promptbox running.
+
+```
 cd promptbox
 pip install -r requirements
-
-
-#git clone git@hf.co:flan-t5-base
-#git clone git@hf.co:fastchat-t5-3b-v1.0
-'''
-
-sudo apt install python3-pip
-
-sudo apt update -y
-
-
-
-# Startup the project
-
-The initial setup.
-
-Create virtualenv and install the project:
-```bash
-sudo apt-get install virtualenv python-pip python-dev
-deactivate; virtualenv ~/venv ; source ~/venv/bin/activate ;\
-    pip install pip -U; pip install -r requirements.txt
+streamlit run ui/Home.py
 ```
 
-Unittest test:
-```bash
-make clean install test
-```
-
-Check for hackathon in gitlab.com/{group}.
-If your project is not set please add it:
-
-- Create a new project on `gitlab.com/{group}/hackathon`
-- Then populate it:
-
-```bash
-##   e.g. if group is "{group}" and project_name is "hackathon"
-git remote add origin git@github.com:{group}/hackathon.git
-git push -u origin master
-git push -u origin --tags
-```
-
-Functionnal test with a script:
-
-```bash
-cd
-mkdir tmp
-cd tmp
-hackathon-run
-```
-
-# Install
-
-Go to `https://github.com/{group}/hackathon` to see the project, manage issues,
-setup you ssh public key, ...
-
-Create a python3 virtualenv and activate it:
-
-```bash
-sudo apt-get install virtualenv python-pip python-dev
-deactivate; virtualenv -ppython3 ~/venv ; source ~/venv/bin/activate
-```
-
-Clone the project and install it:
-
-```bash
-git clone git@github.com:{group}/hackathon.git
-cd hackathon
-pip install -r requirements.txt
-make clean install test                # install and test
-```
-Functionnal test with a script:
-
-```bash
-cd
-mkdir tmp
-cd tmp
-hackathon-run
-```
+That's it! Promptbox should now be running on localhost:8501.
