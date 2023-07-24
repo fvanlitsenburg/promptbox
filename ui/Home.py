@@ -2,7 +2,6 @@ import streamlit as st
 from utils import haystack_is_ready, upload_doc, haystack_version, load_models, fetch_docs, query_listed_documents, check_sentiment
 import os
 
-print(os.getcwd())
 
 st.set_page_config(
     page_title="Promptbox",
@@ -14,7 +13,6 @@ modelbase = load_models()
 st.session_state['models'] = modelbase
 st.session_state['modellist'] = ['flan-t5-base','fastchat-t5-3b-v1.0']
 print(session_state.modellist)
-#st.session_state['models'] = "flan-t5-base"
 
 st.image("ui/pages/promptbox_banner.png")
 

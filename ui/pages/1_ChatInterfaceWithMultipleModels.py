@@ -9,8 +9,7 @@ import streamlit as st
 from markdown import markdown
 from utils import haystack_is_ready, upload_doc, haystack_version, load_models, fetch_docs, query_listed_documents, check_sentiment
 
-# Adjust to a question that you would like users to see in the search bar when they load the UI:
-# Questions
+# Adjust to questions for demo:
 DEFAULT_QUESTION_AT_STARTUP_P1 = os.getenv("DEFAULT_QUESTION_AT_STARTUP_P1", "What are HSBC’s restrictive policies on the Oil and Gas sectors?")
 DEFAULT_QUESTION_AT_STARTUP_P2 = os.getenv("DEFAULT_QUESTION_AT_STARTUP_P2", "What kind of new financing will be prohibited by HSBC based on this policy?")
 DEFAULT_QUESTION_AT_STARTUP_P3 = os.getenv("DEFAULT_QUESTION_AT_STARTUP_P3", "What kind of new clients will be restricted by HSBC based on this policy?")
@@ -18,7 +17,7 @@ DEFAULT_QUESTION_AT_STARTUP_P4 = os.getenv("DEFAULT_QUESTION_AT_STARTUP_P4", "Wh
 DEFAULT_QUESTION_AT_STARTUP_P5 = os.getenv("DEFAULT_QUESTION_AT_STARTUP_P5", "  How will Client Transition Plan affect HSBC’s decision on financing Oil and Gas clients?")
 
 
-# Prompts
+# Standard prompt:
 DEFAULT_PROMPT_AT_STARTUP_P1 = os.getenv("DEFAULT_PROMPT_AT_STARTUP_P1","""Synthesize a comprehensive answer from the following given question and relevant paragraphs.
 Provide a clear and concise response that summarizes the key points and information presented in the paragraphs.
 Your answer should be in your own words and be no longer than necessary.
@@ -49,7 +48,7 @@ def main():
 
     set_state_if_absent("results", None)
     set_state_if_absent("raw_json", None)
-    set_state_if_absent("random_question_requested", False)
+
 
     # Small callback to reset the interface in case the text of the question changes
     def reset_results(*args):
@@ -157,7 +156,7 @@ def main():
 
             run_query = (
                 run_pressed or question_p1 != st.session_state.question_p1
-            ) and not st.session_state.random_question_requested
+            )
 
             # Check the connection
             with st.spinner("⌛️ &nbsp;&nbsp; Haystack is starting..."):
@@ -180,25 +179,27 @@ def main():
                     modellist = st.session_state.modellist
                     output = {}
                     detailed_output = {}
+
+                    # Load each model and answer the queries for it
                     for model in modellist:
+
+
+                        # Check if the requested model(s) has already been loaded
                         if model in modelbase.keys():
                             print("No loading needed")
                         else:
                             print("Loading next model")
                             modelbase = load_models([model])
 
-                        print("Running "+model)
-                        print(model)
-                        print(modelbase[model])
-                        print(type(modelbase[model]))
-                        print(document)
                         output[model] = {}
                         detailed_output[model] = {}
+
+                        # Run each model
                         for question in [question_p1,question_p2,question_p3,question_p4,question_p5]:
                             response = query_listed_documents(question,[document],modelbase[model],prompt_p1)
                             output[model][question] = response[0][0]['Answer']
                             detailed_output[model][question] = response[1]
-                    print("Table")
+
                     with part2:
                         st.table(output)
 

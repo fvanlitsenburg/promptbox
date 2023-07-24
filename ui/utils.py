@@ -23,8 +23,10 @@ from haystack.schema import Document
 
 @st.cache_resource
 def load_models(models=['flan-t5-base']):
-    ''' Load model and store it in cache. If a different model is loaded, we overwrite the old model.
-    '''
+    """ Load model and store it in cache. If a different model is loaded, we overwrite the old model.
+
+    Takes a list of models as an input, *however*, until this code has been refactored the list should contain only one model.
+    """
     models = dict.fromkeys(models,'')
     for model in models:
         models[model] = PromptModel(model_name_or_path=model_path+model,model_kwargs={'task_name':'text2text-generation','trust_remote_code':True})
@@ -36,6 +38,10 @@ def load_models(models=['flan-t5-base']):
     return models
 
 def build_ES_pipeline(promptmodel,prompt_text):
+    """
+    This function takes a promptmodel - preloaded from the load_models function and cached by Streamlit -
+    and uses it to build a Pipeline that connects to an ElasticSearch DocumentStore,
+    """
 
     ESdocument_store = ElasticsearchDocumentStore(index="document",host='localhost')
 
@@ -44,20 +50,8 @@ def build_ES_pipeline(promptmodel,prompt_text):
     )
 
 
-    #model = PromptModel(model_name_or_path="lmsys/fastchat-t5-3b-v1.0",model_kwargs={'task_name':'text2text-generation'})
-    #model = PromptModel(model_name_or_path=model_path+model,model_kwargs={'task_name':'text2text-generation'})
-    #prompt_node = PromptNode(models[model], default_prompt_template='question-answering-per-document',)
-
-    #othermodel = PromptModel(model_name_or_path=model_path+'flan-t5-base',model_kwargs={'task_name':'text2text-generation'})
-    #print(othermodel)
-
     print("Loading node")
-    print(promptmodel)
-    print(type(promptmodel))
     prompt_node = PromptNode(promptmodel, default_prompt_template=prompt_text)
-
-    print(prompt_node)
-    #prompt_node = model
     prompt_node.debug = True
 
     print("Loading pipeline")
@@ -67,7 +61,19 @@ def build_ES_pipeline(promptmodel,prompt_text):
     return ES_p
 
 def check_sentiment(query,model,in_docs,prompt_text):
+    """
+    This function takes a query and assesses whether the output suggests 'yes', 'no', or 'n/a'. The prompt_text should be geared towards giving 'yes.', 'no.', or'na.' as an output.
 
+    It outputs a dictionary of document names, and whether the answer was 'yes' or 'no'; a list of outputs from running the model;
+    and a list of document names where the answer was 'no'.
+
+    Parameters
+    - query: the query to give a yes/no answer to
+    - model: the model to use, as loaded in load_models above
+    - in_docs: a dictionary of document names and corresponding text snippets to check for a yes/no answer
+    - prompt_text: the prompt template text to use
+
+    """
     prompt_node = PromptNode(model, default_prompt_template=prompt_text)
 
     p2 = Pipeline()
@@ -90,13 +96,6 @@ def check_sentiment(query,model,in_docs,prompt_text):
     return documents,answers,through_docs
 
 
-'''@st.cache_resource
-def load_models(model,prompt_text):
-    models = {"flan-t5-base":'','fastchat-t5-3b-v1.0':''}
-    global use_model
-    use_model = build_ES_pipeline(model,prompt_text)
-    print("Successfully loaded " + model)
-    return use_model'''
 
 API_ENDPOINT = os.getenv("API_ENDPOINT", "http://localhost:8000")
 STATUS = "initialized"
@@ -129,9 +128,9 @@ def haystack_version():
     return requests.get(url, timeout=0.1).json()["hs_version"]
 
 def fetch_docs(store="ES"):
-    '''
+    """
     Fetches the names of files in the document store.
-    '''
+    """
     if store == "Weaviate":
         client = weaviate.Client(
         url = "http://localhost:8080",  # Replace with your endpoint
@@ -169,9 +168,9 @@ def fetch_docs(store="ES"):
     return docs
 
 def query_listed_documents(query,documents,model,prompt_text):
-    ''' Takes a query, list of documents, and a pipeline to run retrieval on the specified documents.
+    """ Takes a query, list of documents, and a pipeline to run retrieval on the specified documents.
 
-    '''
+    """
 
     output = []
     det_output = []
