@@ -11,8 +11,9 @@ st.set_page_config(
 modelbase = load_models()
 
 st.session_state['models'] = modelbase
-st.session_state['modellist'] = ['flan-t5-base','fastchat-t5-3b-v1.0']
-print(session_state.modellist)
+#st.session_state['modellist'] = ['flan-t5-base','fastchat-t5-3b-v1.0']
+st.session_state['modellist'] = ['flan-t5-base']
+print(st.session_state.modellist)
 
 st.image("ui/pages/promptbox_banner.png")
 
