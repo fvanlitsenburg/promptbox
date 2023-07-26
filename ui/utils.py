@@ -11,7 +11,7 @@ import streamlit as st
 
 from haystack import Pipeline
 from haystack.document_stores import ElasticsearchDocumentStore
-from haystack.nodes import BM25Retriever
+from haystack.nodes import BM25Retriever, EmbeddingRetriever
 from haystack.nodes import  PromptNode, PromptTemplate,AnswerParser,PromptModel
 from elasticsearch import Elasticsearch
 
@@ -25,7 +25,7 @@ from haystack.schema import Document
 def load_models(models=['flan-t5-base']):
     """ Load model and store it in cache. If a different model is loaded, we overwrite the old model.
 
-    Takes a list of models as an input, *however*, until this code has been refactored the list should contain only one model.
+    Takes a list of models as an input, *however*, until this code has been refactored the input list should contain only one model.
     """
     models = dict.fromkeys(models,'')
     for model in models:
@@ -43,12 +43,13 @@ def build_ES_pipeline(promptmodel,prompt_text):
     and uses it to build a Pipeline that connects to an ElasticSearch DocumentStore,
     """
 
-    ESdocument_store = ElasticsearchDocumentStore(index="document",host='localhost')
+    ESdocument_store = ElasticsearchDocumentStore(index="document",host='localhost') # Comment to change to embedding retrieval
 
-    BM25retriever = BM25Retriever(
-        document_store=ESdocument_store
-    )
+    # ESdocument_store = ElasticsearchDocumentStore(index="document",host='localhost',embedding_dim=384) # Uncomment for embedding retrieval
 
+    Retriever = BM25Retriever(document_store=ESdocument_store) # Comment to change to embedding retrieval
+
+    #Retriever = EmbeddingRetriever(document_store=ESdocument_store, embedding_model="sentence-transformers/all-MiniLM-L6-v2", model_format="sentence_transformers", top_k=5) # Uncomment for embedding retrieval
 
     print("Loading node")
     prompt_node = PromptNode(promptmodel, default_prompt_template=prompt_text)
@@ -56,7 +57,7 @@ def build_ES_pipeline(promptmodel,prompt_text):
 
     print("Loading pipeline")
     ES_p = Pipeline()
-    ES_p.add_node(component=BM25retriever, name="Retriever1", inputs=["Query"])
+    ES_p.add_node(component=Retriever, name="Retriever1", inputs=["Query"])
     ES_p.add_node(component=prompt_node, name="QA", inputs=["Retriever1"])
     return ES_p
 
