@@ -8,12 +8,20 @@ st.set_page_config(
     page_icon="ui/pages/promptbox_logo.png",
 )
 
-modelbase = load_models()
+
+
+
+st.session_state['modellist'] = ['flan-t5-base','fastchat-t5-3b-v1.0']
+
+
+modelbase = load_models(st.session_state.modellist) # Comment this line to run with only one model in cache:
+
+# Uncomment this line to run with only one model in cache:
+# modelbase = load_models(['flan-t5-base'])
 
 st.session_state['models'] = modelbase
-#st.session_state['modellist'] = ['flan-t5-base','fastchat-t5-3b-v1.0']
-st.session_state['modellist'] = ['flan-t5-base']
 print(st.session_state.modellist)
+print(modelbase)
 
 st.image("ui/pages/promptbox_banner.png")
 

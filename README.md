@@ -35,8 +35,10 @@ git clone https://huggingface.co/lmsys/fastchat-t5-3b-v1.0
 
 ## Downloading Promptbox and Haystack repositories
 
+```
 git clone -b v1.17.1 https://github.com/deepset-ai/haystack.git
 git clone https://github.com/fvanlitsenburg/promptbox.git
+```
 
 ## Running Haystack and Promptbox
 
@@ -47,7 +49,14 @@ Assuming you have docker-compose installed and running.
 First,
 
 ```
+# Upgrade pip
+pip install --upgrade pip
+
+# Install Haystack in editable mode
 cd haystack
+pip install -e '.[all]'
+
+# Run Haystack
 docker-compose up
 ```
 
@@ -55,7 +64,7 @@ In a separate terminal, let's get Promptbox running.
 
 ```
 cd promptbox
-pip install -r requirements
+pip install -r requirements.txt
 streamlit run ui/Home.py
 ```
 

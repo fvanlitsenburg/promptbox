@@ -220,9 +220,9 @@ def main():
                             modelbase = load_models([model])
                     print("Running "+model)
                     print(modelbase[model])
-                    print(type(modelbase[model]))
+                    
                     output = query_listed_documents(question,fetch_docs(),modelbase[model],prompt)
-                    print("Table")
+                    
                     with part2:
                         st.table(output[0])
                     print("Check sentiment")
@@ -239,7 +239,7 @@ def main():
                     with part2:
                         st.write(question2)
                         st.table(output2[0])
-                    print("oOutput:")
+                    print("Output:")
                     with tab3:
                         expander = st.expander("See detailed prompt info for question 1")
                         expander.write(output[1])
