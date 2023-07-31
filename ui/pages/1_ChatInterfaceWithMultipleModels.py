@@ -7,7 +7,7 @@ from json import JSONDecodeError
 import pandas as pd
 import streamlit as st
 from markdown import markdown
-from utils import haystack_is_ready, upload_doc, haystack_version, load_models, fetch_docs, query_listed_documents, check_sentiment
+from utils.utils import haystack_is_ready, upload_doc, haystack_version, load_models, fetch_docs, query_listed_documents, check_sentiment
 
 # Adjust to questions for demo:
 DEFAULT_QUESTION_AT_STARTUP_P1 = os.getenv("DEFAULT_QUESTION_AT_STARTUP_P1", "What are HSBC’s restrictive policies on the Oil and Gas sectors?")
