@@ -12,7 +12,7 @@ st.set_page_config(
 
 
 
-st.session_state['modellist'] = ['flan-t5-base','llama-cpp']
+st.session_state['modellist'] = ['llama-cpp','nous']
 
 
 modelbase = load_models(st.session_state.modellist) # Comment this line to run with only one model in cache
