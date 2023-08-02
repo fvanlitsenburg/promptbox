@@ -187,10 +187,10 @@ def load_models(models=['flan-t5-base']):
     Takes a list of models as an input, *however*, until this code has been refactored the input list should contain only one model.
     """
     models = dict.fromkeys(models,'')
-    cpp_models = ['llama-cpp']
+    cpp_models = {'llama-cpp':'llama2-7b/llama-2-7b-chat.ggmlv3.q4_1.bin','nous':'nous/nous-hermes-llama-2-7b.ggmlv3.q3_K_M.bin'}
     for model in models:
-        if model in cpp_models:
-            models[model] = PromptModel(model_name_or_path="../llama.cpp/models/llama2-7b/llama-2-7b-chat.ggmlv3.q4_1.bin",invocation_layer_class=LlamaCPPInvocationLayer)
+        if model in cpp_models.keys():
+            models[model] = PromptModel(model_name_or_path="../llama.cpp/models/"+cpp_models[model],invocation_layer_class=LlamaCPPInvocationLayer,model_kwargs={'max_context':4096})
         else:
             models[model] = PromptModel(model_name_or_path=model_path+model,model_kwargs={'task_name':'text2text-generation','trust_remote_code':True})
         print(models[model])
@@ -215,7 +215,7 @@ def build_ES_pipeline(promptmodel,prompt_text):
     #Retriever = EmbeddingRetriever(document_store=ESdocument_store, embedding_model="sentence-transformers/all-MiniLM-L6-v2", model_format="sentence_transformers", top_k=5) # Uncomment for embedding retrieval
 
     print("Loading node")
-    prompt_node = PromptNode(promptmodel, default_prompt_template=prompt_text)
+    prompt_node = PromptNode(promptmodel, default_prompt_template=prompt_text,model_kwargs={"max_tokens":512})
     prompt_node.debug = True
 
     print("Loading pipeline")
@@ -342,7 +342,7 @@ def query_listed_documents(query,documents,model,prompt_text):
     p = build_ES_pipeline(model,prompt_text)
 
     for j in documents:
-        res = p.run(query=query,params={"Retriever1": {"top_k": 10,"filters":{'name':[j]}},"debug": True})
+        res = p.run(query=query,params={"Retriever1": {"top_k": 5,"filters":{'name':[j]}},"debug": True})
         print(res)
         out = {'Document':j,'Answer':res['results'][0].replace('<pad>',"")}
         output.append(out)
