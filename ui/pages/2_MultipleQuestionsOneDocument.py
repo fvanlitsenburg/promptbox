@@ -196,7 +196,7 @@ def main():
 
                         # Run each model
                         for question in [question_p1,question_p2,question_p3,question_p4,question_p5]:
-                            response = query_listed_documents(question,[document],modelbase[model],prompt_p1)
+                            response = query_listed_documents(question,[],modelbase[model],prompt_p1)
                             output[model][question] = response[0][0]['Answer']
                             detailed_output[model][question] = response[1]
 
